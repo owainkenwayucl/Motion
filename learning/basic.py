@@ -3,6 +3,7 @@ import math
 import random
 import numba
 import visualisation
+import time
 
 G = 6.67408e-11
 
@@ -113,9 +114,16 @@ def simulate(bodies, dT = 1000.0, T = 10000, output_freq = 100):
     return trajectory
 
 if __name__ == "__main__":
+    year = 3600.0 * 24 * 365
+    dT = 1000.0
+    number_steps = math.ceil(year/dT)
     bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS,JUPITER,SATURN,URANUS,NEPTUNE,PLUTO])
-    bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS])
+    #bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS])
     print(f"Simulating {len(bodies)} bodies.")
-    trajectory = simulate(bodies, dT=1000.0, T=80000, output_freq=100)
+    start = time.time()
+    trajectory = simulate(bodies, dT=dT, T=number_steps, output_freq=100)
+    stop = time.time()
+    elapsed = stop - start
+    print(f"Time taken: {elapsed} seconds")
     print("Visualising.")
     visualisation.visualise(trajectory)
