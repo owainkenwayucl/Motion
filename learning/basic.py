@@ -1,8 +1,8 @@
 import numpy
 import math
-import matplotlib.pyplot as plot
 import random
 import numba
+import visualisation
 
 G = 6.67408e-11
 
@@ -112,32 +112,10 @@ def simulate(bodies, dT = 1000.0, T = 10000, output_freq = 100):
 
     return trajectory
 
-def visualise(trajectory):
-    fig = plot.figure()
-    colours = ["r","b","g","y","m","c"]
-    ax = fig.add_subplot(1,1,1, projection="3d")
-    max_range = 0
-
-    for index, selected_body in enumerate(trajectory):
-        max_x = max(selected_body["x"])
-        max_y = max(selected_body["y"])
-        max_z = max(selected_body["z"])
-        max_dimension = max(max_x, max_y, max_z)
-        if max_dimension > max_range:
-            max_range = max_dimension
-
-        ax.plot(selected_body["x"], selected_body["y"], selected_body["z"], c = colours[index%len(colours)], label = selected_body["name"])
-
-    ax.set_xlim([-max_range,max_range])
-    ax.set_ylim([-max_range,max_range])
-    ax.set_zlim([-max_range,max_range])
-
-    plot.show()
-
 if __name__ == "__main__":
     bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS,JUPITER,SATURN,URANUS,NEPTUNE,PLUTO])
     bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS])
     print(f"Simulating {len(bodies)} bodies.")
     trajectory = simulate(bodies, dT=1000.0, T=80000, output_freq=100)
     print("Visualising.")
-    visualise(trajectory)
+    visualisation.visualise(trajectory)
