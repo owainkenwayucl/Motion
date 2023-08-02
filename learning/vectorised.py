@@ -109,7 +109,6 @@ def radius_v(position, other_positions):
     return r, r_vec
 
 def update_acceleration_euler_v(state, current_index, dT):
-    acceleration = numpy.array([0.0,0.0,0.0])
     current_body = state[current_index]
 
     other_states = numpy.delete(state,current_index,0)
