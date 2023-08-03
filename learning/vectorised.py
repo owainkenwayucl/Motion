@@ -162,16 +162,19 @@ def update_acceleration_rk4_v(state, current_index, dT):
 
     return acceleration
 
+@numba.jit("(float64[:,:],float64)",nopython=True)
 def update_velocity_v(states, dT = 1.0):
     for a in range(len(states)):
         acceleration = update_acceleration_rk4_v(states, a, dT)
         #acceleration = update_acceleration_euler_v(states, a, dT)
         states[a,3:6] += acceleration * dT
 
+@numba.jit("(float64[:,:],float64)",nopython=True)
 def update_position_v(states, dT = 1.0):
     for a in range(len(states)):
         states[a,0:3] += states[a,3:6] * dT
 
+@numba.jit("(float64[:,:],float64)",nopython=True)
 def update_states_v(states, dT=1.0):
     update_velocity_v(states, dT=dT)
     update_position_v(states, dT=dT)
