@@ -62,6 +62,15 @@ def lin_sum(vvect):
             r[a] += vvect[b,a]
     return r
 
+@numba.jit("float64[:,:](float64[:,:])", nopython=True)
+def lin_sum_vert(vvect):
+    l = len(vvect[0])
+    r = numpy.zeros((l,1))
+    for a in range(l):
+        for b in range(3):
+            r[a,0] += vvect[b,a]
+    return r
+
 @numba.jit("float64[:,:](float64[:],float64[:,:],float64)",nopython=True)
 def partial_step_v(position, other_positions, dT):
     position_ex = re_smear(position, len(other_positions))
@@ -72,11 +81,7 @@ def partial_step_v(position, other_positions, dT):
 def radius_v(position, other_positions):
     position_ex = re_smear(position, len(other_positions))
     r_vec = (position_ex - other_positions) * -1
-    r = lin_sum((r_vec * r_vec).transpose())** 0.5
-    #r = sum((r_vec * r_vec).transpose())** 0.5
-    #print(r2)
-    #print(r)
-    r = r.reshape(len(r),1)
+    r = lin_sum_vert((r_vec * r_vec).transpose())** 0.5
     return r, r_vec
 
 def update_acceleration_euler_v(state, current_index, dT):
@@ -86,7 +91,7 @@ def update_acceleration_euler_v(state, current_index, dT):
     r,r_vec = radius_v(current_body[0:3], other_states[:,0:3])
     scalar = numpy.repeat(G * other_states[:,6:7]/(r**3), 3,1)
 
-    acceleration = sum(scalar * r_vec)
+    acceleration = lin_sum(scalar * r_vec)
     return acceleration
 
 def update_acceleration_rk4_v(state, current_index, dT):
@@ -122,7 +127,7 @@ def update_acceleration_rk4_v(state, current_index, dT):
     k4 = scalar * (other_states[:,0:3] - temp_position)
 
 
-    acceleration = sum((k1 + (k2 * 2) + (k3 * 2) + k4)/6)
+    acceleration = lin_sum((k1 + (k2 * 2) + (k3 * 2) + k4)/6)
 
     return acceleration
 
