@@ -45,13 +45,21 @@ def convert_bodies(bodies):
 #    r_mag = (r_vec[0]**2 + r_vec[1]**2 + r_vec[2]**2)**0.5
 #    return r_mag, r_vec
 
+@numba.jit("float64[:,:](float64[:],int64)", nopython=True)
+def re_smear(vector, number):
+    r = numpy.zeros((number, len(vector)))
+    for a in range(number):
+        r[a,:] = vector
+    return r
+
+@numba.jit("float64[:,:](float64[:],float64[:,:],float64)",nopython=True)
 def partial_step_v(position, other_positions, dT):
-    position_ex = numpy.repeat(numpy.reshape(position,(1,3)), len(other_positions),0)
+    position_ex = re_smear(position, len(other_positions))
     r_vec = position_ex + (dT *other_positions)
     return r_vec
 
 def radius_v(position, other_positions):
-    position_ex = numpy.repeat(numpy.reshape(position,(1,3)), len(other_positions),0)
+    position_ex = re_smear(position, len(other_positions))
     r_vec = (position_ex - other_positions) * -1
     r =  sum((r_vec * r_vec).transpose())** 0.5
     r = r.reshape(len(r),1)
