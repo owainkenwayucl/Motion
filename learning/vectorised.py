@@ -50,8 +50,8 @@ def partial_step(vector1, vector2, dT):
 
 def partial_step_v(position, other_positions, dT):
     position_ex = numpy.repeat(numpy.reshape(position,(1,3)), len(other_positions),0)
-    r_vec = position_ex - other_positions
-    return dT * r_vec
+    r_vec = position_ex + (dT *other_positions)
+    return r_vec
 
 def update_acceleration(bodies, current_index, dT):
     acceleration = numpy.array([0.0,0.0,0.0])
@@ -103,7 +103,7 @@ def update_acceleration_rk4(bodies, current_index, dT):
 
 def radius_v(position, other_positions):
     position_ex = numpy.repeat(numpy.reshape(position,(1,3)), len(other_positions),0)
-    r_vec = position_ex - other_positions
+    r_vec = (position_ex - other_positions) * -1
     r =  sum((r_vec * r_vec).transpose())** 0.5
     r = r.reshape(len(r),1)
     return r, r_vec
@@ -186,8 +186,8 @@ def update_velocity(bodies, dT = 1.0):
 
 def update_velocity_v(states, dT = 1.0):
     for a in range(len(states)):
-        #acceleration = update_acceleration_rk4_v(states, a, dT)
-        acceleration = update_acceleration_euler_v(states, a, dT)
+        acceleration = update_acceleration_rk4_v(states, a, dT)
+        #acceleration = update_acceleration_euler_v(states, a, dT)
         states[a,3:6] += acceleration * dT
 
 def update_position_v(states, dT = 1.0):
