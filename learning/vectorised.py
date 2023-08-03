@@ -52,16 +52,30 @@ def re_smear(vector, number):
         r[a,:] = vector
     return r
 
+# this function doesn't do what I want!
+@numba.jit("float64[:](float64[:,:])", nopython=True)
+def lin_sum(vvect):
+    l = len(vvect[0])
+    r = numpy.zeros(l)
+    for a in range(l):
+        for b in range(3):
+            r[a] += vvect[b,a]
+    return r
+
 @numba.jit("float64[:,:](float64[:],float64[:,:],float64)",nopython=True)
 def partial_step_v(position, other_positions, dT):
     position_ex = re_smear(position, len(other_positions))
     r_vec = position_ex + (dT *other_positions)
     return r_vec
 
+@numba.jit("Tuple((float64[:,:], float64[:,:]))(float64[:],float64[:,:])",nopython=True)
 def radius_v(position, other_positions):
     position_ex = re_smear(position, len(other_positions))
     r_vec = (position_ex - other_positions) * -1
-    r =  sum((r_vec * r_vec).transpose())** 0.5
+    r = lin_sum((r_vec * r_vec).transpose())** 0.5
+    #r = sum((r_vec * r_vec).transpose())** 0.5
+    #print(r2)
+    #print(r)
     r = r.reshape(len(r),1)
     return r, r_vec
 
