@@ -39,67 +39,16 @@ def convert_bodies(bodies):
 
     return labels, state
 
-@numba.jit("Tuple((float64, float64[:]))(float64[:],float64[:])",nopython=True)
-def radius(vector1, vector2):
-    r_vec = vector1 - vector2
-    r_mag = (r_vec[0]**2 + r_vec[1]**2 + r_vec[2]**2)**0.5
-    return r_mag, r_vec
-
-def partial_step(vector1, vector2, dT):
-    return vector1 + (vector2 * dT)
+#@numba.jit("Tuple((float64, float64[:]))(float64[:],float64[:])",nopython=True)
+#@def radius(vector1, vector2):
+#    r_vec = vector1 - vector2
+#    r_mag = (r_vec[0]**2 + r_vec[1]**2 + r_vec[2]**2)**0.5
+#    return r_mag, r_vec
 
 def partial_step_v(position, other_positions, dT):
     position_ex = numpy.repeat(numpy.reshape(position,(1,3)), len(other_positions),0)
     r_vec = position_ex + (dT *other_positions)
     return r_vec
-
-def update_acceleration(bodies, current_index, dT):
-    acceleration = numpy.array([0.0,0.0,0.0])
-    current_body = bodies[current_index]
-    for index, selected_body in enumerate(bodies):
-        if index != current_index:
-            r, r_vec = radius(selected_body.position, current_body.position)
-            scalar = (G * selected_body.mass) / (r**3)
-            acceleration += (scalar * r_vec)
-
-    return acceleration
-
-def update_acceleration_rk4(bodies, current_index, dT):
-    acceleration = numpy.array([0.0,0.0,0.0])
-    current_body = bodies[current_index]
-
-    k1 = numpy.array([0.0,0.0,0.0])
-    k2 = numpy.array([0.0,0.0,0.0])
-    k3 = numpy.array([0.0,0.0,0.0])
-    k4 = numpy.array([0.0,0.0,0.0])
-
-    temp_position = numpy.array([0.0,0.0,0.0])
-    temp_velocity = numpy.array([0.0,0.0,0.0])
-
-    for index, selected_body in enumerate(bodies):
-        if index != current_index:
-            r, r_vec = radius(selected_body.position, current_body.position)
-            scalar = (G * selected_body.mass) / (r**3)
-
-            k1 = scalar * r_vec
-
-            temp_velocity = partial_step(current_body.velocity, k1, 0.5)
-            temp_position = partial_step(current_body.position, temp_velocity, 0.5*dT)
-            k2 = scalar * (selected_body.position - temp_position)
-
-            temp_velocity = partial_step(current_body.velocity, k2, 0.5)
-            temp_position = partial_step(current_body.position, temp_velocity, 0.5*dT)
-            k3 = scalar * (selected_body.position - temp_position)
-
-            temp_velocity = partial_step(current_body.velocity, k3, 0.5)
-            temp_position = partial_step(current_body.position, temp_velocity, 0.5*dT)
-            k4 = scalar * (selected_body.position - temp_position)
-
-            acceleration += (k1 + (k2 * 2) + (k3 * 2) + k4)/6
-
-
-    return acceleration
-
 
 def radius_v(position, other_positions):
     position_ex = numpy.repeat(numpy.reshape(position,(1,3)), len(other_positions),0)
@@ -154,35 +103,6 @@ def update_acceleration_rk4_v(state, current_index, dT):
     acceleration = sum((k1 + (k2 * 2) + (k3 * 2) + k4)/6)
 
     return acceleration
-"""
-    for index, selected_body in enumerate(bodies):
-        if index != current_index:
-            r, r_vec = radius(selected_body.position, current_body.position)
-            scalar = (G * selected_body.mass) / (r**3)
-
-            k1 = scalar * r_vec
-
-            temp_velocity = partial_step(current_body.velocity, k1, 0.5)
-            temp_position = partial_step(current_body.position, temp_velocity, 0.5*dT)
-            k2 = scalar * (selected_body.position - temp_position)
-
-            temp_velocity = partial_step(current_body.velocity, k2, 0.5)
-            temp_position = partial_step(current_body.position, temp_velocity, 0.5*dT)
-            k3 = scalar * (selected_body.position - temp_position)
-
-            temp_velocity = partial_step(current_body.velocity, k3, 0.5)
-            temp_position = partial_step(current_body.position, temp_velocity, 0.5*dT)
-            k4 = scalar * (selected_body.position - temp_position)
-
-            acceleration += (k1 + (k2 * 2) + (k3 * 2) + k4)/6
-"""
-
-
-def update_velocity(bodies, dT = 1.0):
-    for index, selected_body in enumerate(bodies):
-        acceleration = update_acceleration_rk4(bodies, index, dT)
-        #acceleration = update_acceleration(bodies, index, dT)
-        selected_body.velocity += acceleration * dT
 
 def update_velocity_v(states, dT = 1.0):
     for a in range(len(states)):
@@ -198,34 +118,20 @@ def update_states_v(states, dT=1.0):
     update_velocity_v(states, dT=dT)
     update_position_v(states, dT=dT)
 
-def update_position(bodies, dT = 1.0):
-    for selected_body in bodies:
-        selected_body.position += selected_body.velocity * dT
-
-def update_bodies(bodies, dT = 1.0):
-    update_velocity(bodies, dT=dT)
-    update_position(bodies, dT=dT)
-
 def simulate(bodies, dT = 1000.0, T = 10000, output_freq = 100):
     trajectory = []
 
     labels,state = convert_bodies(bodies)
-    print(state)
 
     for current_body in bodies:
         trajectory.append({"x":[],"y":[],"z":[],"name":current_body.name})
 
     for i in range(1, int(T)):
-        #update_bodies(bodies, dT=dT)
         update_states_v(state, dT=dT)
 
         if i % output_freq == 0:
             for index, position in enumerate(trajectory):
-                """
-                position["x"].append(bodies[index].position[0])
-                position["y"].append(bodies[index].position[1])
-                position["z"].append(bodies[index].position[2])
-                """
+
                 position["x"].append(state[index,0])
                 position["y"].append(state[index,1])
                 position["z"].append(state[index,2])
