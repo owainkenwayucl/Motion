@@ -93,13 +93,30 @@ def radius_v(position, other_positions):
     r = lin_sum_vert((r_vec * r_vec).transpose())** 0.5
     return r, r_vec
 
+@numba.jit("float64[:,:](float64[:,:],int64)", nopython=True)
+def remove_row(state, index):
+    rows = state.shape[0]
+    columns = state.shape[1]
+
+    r = numpy.zeros((rows - 1, columns))
+
+    row = 0
+    for a in range(rows - 1):
+        if row == index:
+            row += 1
+        for b in range(columns):
+            r[a,b] = state[row, b]
+
+        row += 1
+
+    return r
 
 
-#@numba.jit("float64[:](float64[:,:],int64,float64)",nopython=True)
+@numba.jit("float64[:](float64[:,:],int64,float64)",nopython=True)
 def update_acceleration_euler_v(state, current_index, dT):
     current_body = state[current_index]
+    other_states = remove_row(state, current_index)
 
-    other_states = numpy.delete(state,current_index,0)
     r,r_vec = radius_v(current_body[0:3], other_states[:,0:3])
     scalar = ve_smear(G * other_states[:,6:7]/(r**3),3)
 
@@ -107,7 +124,7 @@ def update_acceleration_euler_v(state, current_index, dT):
     return acceleration
 
 
-#@numba.jit("float64[:](float64[:,:],int64,float64)",nopython=True)
+@numba.jit("float64[:](float64[:,:],int64,float64)",nopython=True)
 def update_acceleration_rk4_v(state, current_index, dT):
     acceleration = numpy.array([0.0,0.0,0.0])
     current_body = state[current_index]
@@ -120,7 +137,7 @@ def update_acceleration_rk4_v(state, current_index, dT):
 
     temp_position = numpy.zeros((nbodies - 1, 3), dtype=numpy.float64)
     temp_velocity = numpy.zeros((nbodies - 1, 3), dtype=numpy.float64)
-    other_states = numpy.delete(state,current_index,0)
+    other_states = remove_row(state, current_index)
     r,r_vec = radius_v(current_body[0:3], other_states[:,0:3])
     scalar = ve_smear(G * other_states[:,6:7]/(r**3),3)
 
