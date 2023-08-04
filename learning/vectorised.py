@@ -16,15 +16,16 @@ class body:
 
 
 SUN = body(numpy.array([0.0,0.0,0.0]), numpy.array([0.0,0.0,0.0]), 2e30, "Sun")
-MERCURY = body(numpy.array([0.0,5.7e10,0.0]), numpy.array([47000.0,0.0,0.0]), 3.285e23, "Mercury")
-VENUS = body(numpy.array([0.0,1.1e11,0.]), numpy.array([35000.0,0.0,0.0]), 4.8e24, "Venus")
-EARTH = body(numpy.array([0.0,1.5e11,0.0]), numpy.array([30000.0,0.0,0.0]), 6e24, "Earth")
-MARS = body(numpy.array([0.0,2.2e11,0.0]), numpy.array([24000.0,0.0,0.0]), 2.4e24, "Mars")
-JUPITER = body(numpy.array([0.0,7.7e11,0.0]), numpy.array([13000.0,0.0,0.0]), 1e28, "Jupiter")
-SATURN = body(numpy.array([0.0,1.4e12,0.0]), numpy.array([9000.0,0.0,0.0]), 5.7e26, "Saturn")
-URANUS = body(numpy.array([0.0,2.8e12,0.0]), numpy.array([6835.0,0.0,0.0]), 8.7e25, "Uranus")
-NEPTUNE = body(numpy.array([0.0,4.5e12,0.0]), numpy.array([5477.0,0.0,0.0]), 1e26, "Neptune")
-PLUTO = body(numpy.array([0.0,3.7e12,0.0]), numpy.array([4748.0,0.0,0.0]), 1.3e22, "Pluto")
+MERCURY = body(numpy.array([0.0,5.7e10,0.0]), numpy.array([-47000.0,0.0,0.0]), 3.285e23, "Mercury")
+VENUS = body(numpy.array([0.0,1.1e11,0.]), numpy.array([-35000.0,0.0,0.0]), 4.8e24, "Venus")
+EARTH = body(numpy.array([0.0,1.5e11,0.0]), numpy.array([-30000.0,0.0,0.0]), 6e24, "Earth")
+MARS = body(numpy.array([0.0,2.2e11,0.0]), numpy.array([-24000.0,0.0,0.0]), 2.4e24, "Mars")
+JUPITER = body(numpy.array([0.0,7.7e11,0.0]), numpy.array([-13000.0,0.0,0.0]), 1e28, "Jupiter")
+SATURN = body(numpy.array([0.0,1.4e12,0.0]), numpy.array([-9000.0,0.0,0.0]), 5.7e26, "Saturn")
+URANUS = body(numpy.array([0.0,2.8e12,0.0]), numpy.array([-6835.0,0.0,0.0]), 8.7e25, "Uranus")
+NEPTUNE = body(numpy.array([0.0,4.5e12,0.0]), numpy.array([-5477.0,0.0,0.0]), 1e26, "Neptune")
+PLUTO = body(numpy.array([0.0,3.7e12,0.0]), numpy.array([-4748.0,0.0,0.0]), 1.3e22, "Pluto")
+PLUTO_angled = body(numpy.array([0.0,3.7e12,0.0]), numpy.array([-4748.0*math.cos(math.radians(17)),0.0,4748.0*math.sin(math.radians(17))]), 1.3e22, "Pluto")
 
 def convert_bodies(bodies):
     nbodies = len(bodies)
@@ -200,9 +201,9 @@ def simulate(bodies, dT = 1000.0, T = 10000, output_freq = 100):
 
 if __name__ == "__main__":
     year = 3600.0 * 24 * 365
-    dT = 1000.0
-    number_steps = math.ceil(year/dT)
-    bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS,JUPITER,SATURN,URANUS,NEPTUNE,PLUTO])
+    dT = 500.0
+    number_steps = math.ceil(20 * year/dT)
+    bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS,JUPITER,SATURN,URANUS,NEPTUNE])
     #bodies = numpy.array([SUN,MERCURY,VENUS,EARTH,MARS])
 
     print(f"Simulating {len(bodies)} bodies.")
