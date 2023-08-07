@@ -167,7 +167,7 @@ def update_acceleration_rk4_v(state, current_index, dT):
 def update_velocity_v(states, dT = 1.0):
     for a in range(len(states)):
         acceleration = update_acceleration_rk4_v(states, a, dT)
-        #acceleration = update_acceleration_euler_v(states, a, dT)
+
         states[a,3:6] += acceleration * dT
 
 @numba.jit("(float64[:,:],float64)",nopython=True)
@@ -180,23 +180,43 @@ def update_states_v(states, dT=1.0):
     update_velocity_v(states, dT=dT)
     update_position_v(states, dT=dT)
 
+@numba.jit("Tuple((float64[:,:],float64[:,:], float64[:,:]))(float64[:,:],float64, int64, int64, int64, int64)", nopython=True)
+def simulate_v(states, dT = 1000.0, T = 10000, output_freq = 100,records = 100, n_bodies = 1):    
+    x = numpy.zeros((n_bodies, records), dtype=numpy.float64)
+    y = numpy.zeros((n_bodies, records), dtype=numpy.float64)
+    z = numpy.zeros((n_bodies, records), dtype=numpy.float64)
+
+    record = 0
+    for i in range(1, T):
+        update_states_v(states, dT=dT)
+
+        if i % output_freq == 0:
+            for index in range(n_bodies):
+                x[index,record] = states[index,0]
+                y[index,record] = states[index,1]
+                z[index,record] = states[index,2]
+            record += 1
+    return x,y,z
+
 def simulate(bodies, dT = 1000.0, T = 10000, output_freq = 100):
     trajectory = []
 
     labels,state = convert_bodies(bodies)
 
+    n_bodies = 0
     for current_body in bodies:
         trajectory.append({"x":[],"y":[],"z":[],"name":current_body.name})
+        n_bodies += 1
 
-    for i in range(1, int(T)):
-        update_states_v(state, dT=dT)
+    records = int(math.floor(T/output_freq))
 
-        if i % output_freq == 0:
-            for index, position in enumerate(trajectory):
+    x, y, z = simulate_v(states = state, dT = dT, T = int(T), output_freq = output_freq, records = records, n_bodies = n_bodies)
 
-                position["x"].append(state[index,0])
-                position["y"].append(state[index,1])
-                position["z"].append(state[index,2])
+    for index, position in enumerate(trajectory):
+        position["x"] = x[index,:].tolist()
+        position["y"] = y[index,:].tolist()
+        position["z"] = z[index,:].tolist()
+
     return trajectory
 
 if __name__ == "__main__":
