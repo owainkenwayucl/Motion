@@ -175,11 +175,6 @@ def update_position_v(states, dT = 1.0):
     for a in range(len(states)):
         states[a,0:3] += states[a,3:6] * dT
 
-@numba.jit("(float64[:,:],float64)",nopython=True)
-def update_states_v(states, dT=1.0):
-    update_velocity_v(states, dT=dT)
-    update_position_v(states, dT=dT)
-
 @numba.jit("Tuple((float64[:,:],float64[:,:], float64[:,:]))(float64[:,:],float64, int64, int64, int64, int64)", nopython=True)
 def simulate_v(states, dT = 1000.0, T = 10000, output_freq = 100,records = 100, n_bodies = 1):    
     x = numpy.zeros((n_bodies, records), dtype=numpy.float64)
@@ -188,7 +183,8 @@ def simulate_v(states, dT = 1000.0, T = 10000, output_freq = 100,records = 100, 
 
     record = 0
     for i in range(1, T):
-        update_states_v(states, dT=dT)
+        update_velocity_v(states, dT=dT)
+        update_position_v(states, dT=dT)
 
         if i % output_freq == 0:
             for index in range(n_bodies):
